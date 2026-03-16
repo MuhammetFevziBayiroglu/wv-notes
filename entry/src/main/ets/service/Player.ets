@@ -8,6 +8,10 @@ export default class Player {
   playerState: string = 'idle';
   lastAmp: number = 0;
   fileFd?: number;
+  currentTime: number = 0;
+  duration: number = 0;
+  speed: media.PlaybackSpeed = media.PlaybackSpeed.SPEED_FORWARD_1_00_X;
+  onCompleted?: () => void;
 
   get playing() {
     return this.playerState === 'playing';
@@ -24,6 +28,14 @@ export default class Player {
 
       this.player.on('amplitudeUpdate', (amps: number[]) => {
         this.lastAmp = amps.pop() ?? 0;
+      });
+
+      this.player.on('timeUpdate', (time: number) => {
+        this.currentTime = time;
+      });
+
+      this.player.on('durationUpdate', (duration: number) => {
+        this.duration = duration;
       });
 
       this.player.on('error', (e) => {
@@ -47,6 +59,7 @@ export default class Player {
             break;
           case 'prepared':
             console.info('state: prepared');
+            this.player!.setSpeed(this.speed);
             this.player!.play();
             break;
           case 'playing':
@@ -57,6 +70,9 @@ export default class Player {
             break;
           case 'completed':
             console.info('state: completed');
+            if (this.onCompleted) {
+              this.onCompleted();
+            }
             break;
           case 'stopped':
             console.info('state: stopped');
@@ -109,6 +125,19 @@ export default class Player {
       await this.player?.reset();
       await this.player?.release();
       this.player = undefined;
+    }
+  }
+
+  async seek(timeMs: number) {
+    if (this.player) {
+      await this.player.seek(timeMs, media.SeekMode.SEEK_PREV_SYNC);
+    }
+  }
+
+  async setSpeed(speed: media.PlaybackSpeed) {
+    this.speed = speed;
+    if (this.player && (this.playerState === 'prepared' || this.playerState === 'playing' || this.playerState === 'paused' || this.playerState === 'completed')) {
+      await this.player.setSpeed(speed);
     }
   }
 }

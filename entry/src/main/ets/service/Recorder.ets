@@ -8,6 +8,9 @@ export default class Recorder {
   private fileName: string = '';
   recorderState: media.AVRecorderState = 'idle';
   fileFd?: number;
+  elapsedTime: number = 0;
+  private intervalId: number | undefined = undefined;
+  onRecordComplete?: (fileName: string) => void;
 
   get readyToRecord(): boolean {
     return this.recorderState === 'idle' || this.recorderState === 'released';
@@ -17,13 +20,17 @@ export default class Recorder {
     return this.recorderState === 'started';
   }
 
+  get paused(): boolean {
+    return this.recorderState === 'paused';
+  }
+
   async getDecibel(): Promise<number> {
     const amp = await this.recorder?.getAudioCapturerMaxAmplitude()!;
     const db = 20 * Math.log10(amp);
     return db;
   }
 
-  async start(context: Context) {
+  async start(context: Context, quality: string = 'average', maxTimeLimit: number = 0) {
     // initialize recorder
     try {
       this.recorder = await media.createAVRecorder();
@@ -31,6 +38,11 @@ export default class Recorder {
       // Callback function for state changes.
       this.recorder.on('stateChange', (state: media.AVRecorderState, reason: media.StateChangeReason) => {
         this.recorderState = state; // track state changes
+        if (state === 'started') {
+          this.startTimer(maxTimeLimit);
+        } else if (state === 'paused' || state === 'stopped' || state === 'released') {
+          this.stopTimer();
+        }
       });
 
       // Callback function for errors.
@@ -38,11 +50,21 @@ export default class Recorder {
         console.error(`avRecorder failed, code is ${err.code}, message is ${err.message}`);
       });
 
+      let bitrate = 100000;
+      let sampleRate = 48000;
+      if (quality === 'low') {
+        bitrate = 32000;
+        sampleRate = 16000;
+      } else if (quality === 'high') {
+        bitrate = 192000;
+        sampleRate = 96000;
+      }
+
       const avProfile: media.AVRecorderProfile = {
-        audioBitrate: 100000, // Audio bit rate.
+        audioBitrate: bitrate, // Audio bit rate.
         audioChannels: 2, // Number of audio channels.
         audioCodec: media.CodecMimeType.AUDIO_AAC, // Audio encoding format.
-        audioSampleRate: 48000, // Audio sampling rate.
+        audioSampleRate: sampleRate, // Audio sampling rate.
         fileFormat: media.ContainerFormatType.CFT_MPEG_4A, // Container format.
       };
 
@@ -59,6 +81,7 @@ export default class Recorder {
 
       await this.recorder.prepare(avConfig);
       await this.recorder.start();
+      this.elapsedTime = 0;
     } catch (e) {
       console.error('start err:', e.code, e.message);
     } finally {
@@ -66,13 +89,48 @@ export default class Recorder {
     }
   }
 
+  private startTimer(maxTimeLimit: number) {
+    if (this.intervalId === undefined) {
+      this.intervalId = setInterval(async () => {
+        this.elapsedTime++;
+        if (maxTimeLimit > 0 && this.elapsedTime >= maxTimeLimit) {
+          const path = await this.stopAndSave();
+          if (path && this.onRecordComplete) {
+            this.onRecordComplete(path);
+          }
+        }
+      }, 1000);
+    }
+  }
+
+  private stopTimer() {
+    if (this.intervalId !== undefined) {
+      clearInterval(this.intervalId);
+      this.intervalId = undefined;
+    }
+  }
+
+  async pause() {
+    if (this.recorderState === 'started') {
+      await this.recorder?.pause();
+    }
+  }
+
+  async resume() {
+    if (this.recorderState === 'paused') {
+      await this.recorder?.resume();
+    }
+  }
+
   async stopAndSave() {
     try {
-      await this.recorder?.stop();
-      await this.recorder?.reset();
-      await this.recorder?.release();
-      this.recorder = undefined;
-
+      if (this.recorderState === 'started' || this.recorderState === 'paused') {
+        await this.recorder?.stop();
+        await this.recorder?.reset();
+        await this.recorder?.release();
+        this.recorder = undefined;
+        this.stopTimer();
+      }
       return this.fileName;
     } catch (e) {
       console.error('stop err:', e.code, e.message);

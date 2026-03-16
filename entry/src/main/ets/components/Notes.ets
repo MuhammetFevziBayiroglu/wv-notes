@@ -335,7 +335,7 @@ export default struct Notes {
         }, (item: RecordItem) => item.name);
       }.space(LengthMetrics.vp(8));
     }
-    .bindSheet($$this.openSheet, playerBuilder(this.selectedRecord), {
+    .bindSheet($$this.openSheet, playerBuilder(this.selectedRecord, this.records), {
       height: SheetSize.MEDIUM,
       backgroundColor: Color.Black
     });
