@@ -109,7 +109,7 @@ struct PlayerControls {
 
       Row({ space: 20 }) {
         Button() {
-          SymbolGlyph($r('sys.symbol.backward_10'))
+          SymbolGlyph($r('sys.symbol.gobackward_10'))
             .fontColor([Color.White])
             .fontSize(24);
         }
@@ -138,7 +138,7 @@ struct PlayerControls {
         });
 
         Button() {
-          SymbolGlyph($r('sys.symbol.forward_10'))
+          SymbolGlyph($r('sys.symbol.goforward_10'))
             .fontColor([Color.White])
             .fontSize(24);
         }
