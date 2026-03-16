@@ -1,4 +1,4 @@
-import Records from '../service/Records';
+import Records, { RecordItem } from '../service/Records';
 import {
   ArcList,
   ArcListItem,
@@ -168,6 +168,7 @@ export default struct Notes {
       this.handleCancel();
     };
     this.headerContent = new ComponentContent(this.getUIContext(), wrapBuilder(selectionHeaderBuilder), this.headerParams);
+    this.records.fetchDurations(this.getUIContext().getHostContext()!);
   }
 
   renameController: CustomDialogController | null = new CustomDialogController({
@@ -281,7 +282,13 @@ export default struct Notes {
   formatPath(path: string): string {
     const timestamp = Number.parseInt(path.split('.')[0]);
     if (!isNaN(timestamp) && timestamp.toString().length >= 10) {
-      return new Date(timestamp).toLocaleString();
+      const date = new Date(timestamp);
+      const year = date.getFullYear().toString().slice(-2);
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const day = date.getDate().toString().padStart(2, '0');
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      return `${year}-${month}-${day} ${hours}:${minutes}`;
     }
     return path;
   }
@@ -291,24 +298,25 @@ export default struct Notes {
       ArcList({
         header: this.headerContent
       }) {
-        ForEach(this.records.fileNames, (path: string) => {
+        ForEach(this.records.items, (item: RecordItem) => {
           ArcListItem() {
             Button() {
               Row() {
-                Text(this.formatPath(path));
+                Text(this.formatPath(item.name)).fontSize(14);
                 Blank().layoutWeight(1);
+                Text(item.duration).fontSize(14).margin({ right: 8 });
                 SymbolGlyph($r('sys.symbol.arrow_right'));
               }.padding({ left: 16, right: 16 });
             }
             .width('100%')
             .height(40)
-            .backgroundColor(this.selectedRecords.includes(path) ? Color.Grey : Color.White)
+            .backgroundColor(this.selectedRecords.includes(item.name) ? Color.Grey : Color.White)
             .foregroundColor(Color.Black)
             .onClick(async () => {
               if (this.isSelectionMode) {
-                this.toggleSelection(path);
+                this.toggleSelection(item.name);
               } else {
-                this.selectedRecord = path;
+                this.selectedRecord = item.name;
                 this.openSheet = true;
               }
             })
@@ -316,14 +324,14 @@ export default struct Notes {
               LongPressGesture()
                 .onAction(() => {
                   if (this.isSelectionMode) {
-                    this.toggleSelection(path);
+                    this.toggleSelection(item.name);
                   } else {
-                    this.enterSelectionMode(path);
+                    this.enterSelectionMode(item.name);
                   }
                 })
             );
           }.width('calc(100% - 32vp)');
-        }, (item: string) => item);
+        }, (item: RecordItem) => item.name);
       }.space(LengthMetrics.vp(8));
     }
     .bindSheet($$this.openSheet, playerBuilder(this.selectedRecord), {
