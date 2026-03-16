@@ -41,7 +41,28 @@ export default struct Notes {
             .onClick(async () => {
               this.selectedRecord = path;
               this.openSheet = true;
-            });
+            })
+            .gesture(
+              LongPressGesture()
+                .onAction(() => {
+                  AlertDialog.show({
+                    title: 'Delete Record',
+                    message: 'Are you sure you want to delete this record?',
+                    primaryButton: {
+                      value: 'Delete',
+                      fontColor: Color.Red,
+                      action: () => {
+                        this.records.deleteRecord(this.getUIContext().getHostContext()!, path);
+                      }
+                    },
+                    secondaryButton: {
+                      value: 'Cancel',
+                      action: () => {
+                      }
+                    }
+                  });
+                })
+            );
           }.width('calc(100% - 32vp)');
         }, (item: string) => item);
       }.space(LengthMetrics.vp(8));
