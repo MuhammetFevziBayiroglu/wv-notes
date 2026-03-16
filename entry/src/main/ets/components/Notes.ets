@@ -304,7 +304,8 @@ export default struct Notes {
               Row() {
                 Text(this.formatPath(item.name)).fontSize(14);
                 Blank().layoutWeight(1);
-                Text(item.duration).fontSize(14).margin({ right: 8 });
+                Text(item.duration).fontSize(14).margin({ right: 4 });
+                Text(item.size).fontSize(10).fontColor(Color.Gray).margin({ right: 8 });
                 SymbolGlyph($r('sys.symbol.arrow_right'));
               }.padding({ left: 16, right: 16 });
             }

@@ -5,6 +5,7 @@ import { media } from '@kit.MediaKit';
 export class RecordItem {
   name: string;
   duration: string = '0:00';
+  size: string = '0 KB';
 
   constructor(name: string) {
     this.name = name;
@@ -34,8 +35,30 @@ export default class Records {
   async fetchDurations(context: Context) {
     for (const item of this.items) {
       item.duration = await this._getDuration(context, item.name);
+      item.size = this._getSize(context, item.name);
     }
     this.items = [...this.items];
+  }
+
+  private _formatSize(bytes: number): string {
+    if (bytes < 1024) {
+      return bytes + ' B';
+    } else if (bytes < 1024 * 1024) {
+      return (bytes / 1024).toFixed(1) + ' KB';
+    } else {
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+  }
+
+  private _getSize(context: Context, fileName: string): string {
+    try {
+      const filePath = context.filesDir + '/' + fileName;
+      const stat = fs.statSync(filePath);
+      return this._formatSize(stat.size);
+    } catch (e) {
+      console.error('getSize err:', e);
+      return '0 KB';
+    }
   }
 
   private async _getDuration(context: Context, fileName: string): Promise<string> {
