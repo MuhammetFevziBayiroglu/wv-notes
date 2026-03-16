@@ -25,4 +25,14 @@ export default class Records {
     copy.push(fileName);
     this.fileNames = copy;
   }
+
+  deleteRecord(context: Context, fileName: string) {
+    try {
+      const filePath = context.filesDir + '/' + fileName;
+      fs.unlinkSync(filePath);
+      this.fileNames = this.fileNames.filter(name => name !== fileName);
+    } catch (e) {
+      console.error('deleteRecord err:', e);
+    }
+  }
 }
