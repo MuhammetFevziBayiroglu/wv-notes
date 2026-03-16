@@ -39,15 +39,15 @@ export default struct RecorderPage {
         waveVm: this.waveWm
       })
 
-      Column({ space: 10 }) {
+      Column({ space: 4 }) {
         if (this.recorder.recording || this.recorder.paused) {
           Text(this.formatTime(this.recorder.elapsedTime))
-            .fontSize(24)
+            .fontSize(20)
             .fontColor(Color.White)
         } else {
-          Column({ space: 5 }) {
-            Row({ space: 10 }) {
-              Text('Quality:').fontColor(Color.White).fontSize(14)
+          Column({ space: 2 }) {
+            Row({ space: 6 }) {
+              Text('Quality:').fontColor(Color.White).fontSize(10)
               Select([
                 { value: 'Low' },
                 { value: 'Average' },
@@ -55,39 +55,40 @@ export default struct RecorderPage {
               ])
                 .selected(1)
                 .value('Average')
-                .font({ size: 14 })
+                .font({ size: 10 })
                 .fontColor(Color.White)
+                .height(28)
                 .onSelect((index: number) => {
                   const qualities = ['low', 'average', 'high'];
                   this.quality = qualities[index];
                 })
             }
 
-            Row({ space: 10 }) {
-              Text('Max Time (s):').fontColor(Color.White).fontSize(14)
-              TextInput({ placeholder: '0 for no limit' })
+            Row({ space: 6 }) {
+              Text('Max (s):').fontColor(Color.White).fontSize(10)
+              TextInput({ placeholder: '0' })
                 .type(InputType.Number)
-                .width(100)
-                .height(35)
-                .fontSize(14)
+                .width(60)
+                .height(28)
+                .fontSize(10)
                 .onChange((value: string) => {
                   this.maxTimeLimit = Number.parseInt(value) || 0;
                 })
             }
-          }.margin({ bottom: 20 })
+          }.margin({ bottom: 8 })
         }
 
-        Row({ space: 20 }) {
+        Row({ space: 15 }) {
           if (this.recorder.recording || this.recorder.paused) {
             Button() {
               SymbolGlyph(this.recorder.paused ? $r('sys.symbol.play_fill') : $r('sys.symbol.pause'))
                 .fontColor([Color.White])
-                .fontSize(24);
+                .fontSize(18);
             }
             .type(ButtonType.Circle)
             .backgroundColor(Color.Transparent)
-            .size({ width: 50, height: 50 })
-            .border({ color: Color.White, width: 3 })
+            .size({ width: 36, height: 36 })
+            .border({ color: Color.White, width: 2 })
             .onClick(async () => {
               if (this.recorder.recording) {
                 await this.recorder.pause();
@@ -118,8 +119,8 @@ export default struct RecorderPage {
           }
           .type(ButtonType.Circle)
           .backgroundColor(Color.Transparent)
-          .size({ width: '50%', height: '50%' })
-          .border({ color: Color.White, width: 5 })
+          .size({ width: '25%', height: '25%' })
+          .border({ color: Color.White, width: 3 })
           .onClick(async () => {
             if (this.recorder.readyToRecord) { // start the recording
               await this.recorder.start(this.getUIContext().getHostContext()!, this.quality, this.maxTimeLimit)

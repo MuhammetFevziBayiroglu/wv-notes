@@ -130,7 +130,7 @@ export default class Player {
 
   async seek(timeMs: number) {
     if (this.player) {
-      await this.player.seek(timeMs);
+      await this.player.seek(timeMs, media.SeekMode.SEEK_PREV_SYNC);
     }
   }
 
