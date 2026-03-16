@@ -36,6 +36,23 @@ export default class Records {
     }
   }
 
+  deleteRecords(context: Context, fileNames: string[]) {
+    const successfullyDeleted: string[] = [];
+    fileNames.forEach(fileName => {
+      try {
+        const filePath = context.filesDir + '/' + fileName;
+        fs.unlinkSync(filePath);
+        successfullyDeleted.push(fileName);
+      } catch (e) {
+        console.error('deleteRecord err:', e);
+      }
+    });
+    if (successfullyDeleted.length > 0) {
+      const deletedSet = new Set(successfullyDeleted);
+      this.fileNames = this.fileNames.filter(name => !deletedSet.has(name));
+    }
+  }
+
   renameRecord(context: Context, oldName: string, newName: string) {
     try {
       const parts = oldName.split('.');
