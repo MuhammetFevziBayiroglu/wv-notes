@@ -9,9 +9,57 @@ import {
 } from '@kit.ArkUI';
 import playerBuilder from './PlayerPage';
 
+@Observed
+class HeaderParams {
+  isSelectionMode: boolean = false;
+  selectedCount: number = 0;
+  onDelete: () => void = () => {
+  };
+  onRename: () => void = () => {
+  };
+  onCancel: () => void = () => {
+  };
+}
+
 @Builder
-function titleBuilder() {
-  Text('My Notes').fontSize(24);
+function selectionHeaderBuilder(params: HeaderParams) {
+  if (params.isSelectionMode) {
+    Row({ space: 24 }) {
+      if (params.selectedCount === 1) {
+        Button() {
+          SymbolGlyph($r('sys.symbol.square_and_pencil'))
+            .fontSize(24)
+            .fontColor([Color.Blue])
+        }
+        .onClick(() => {
+          params.onRename();
+        })
+        .backgroundColor(Color.Transparent)
+      }
+
+      Button() {
+        SymbolGlyph($r('sys.symbol.trash'))
+          .fontSize(24)
+          .fontColor([Color.Red])
+      }
+      .onClick(() => {
+        params.onDelete();
+      })
+      .backgroundColor(Color.Transparent)
+
+      Button() {
+        SymbolGlyph($r('sys.symbol.xmark'))
+          .fontSize(24)
+          .fontColor([Color.Gray])
+      }
+      .onClick(() => {
+        params.onCancel();
+      })
+      .backgroundColor(Color.Transparent)
+    }.width('100%').justifyContent(FlexAlign.Center).padding({ top: 10, bottom: 10 })
+  } else {
+    Text('My Notes').fontSize(24).margin({ top: 10, bottom: 10 });
+  }
 }
 
 @CustomDialog
@@ -104,12 +152,31 @@ export default struct Notes {
   @State openSheet: boolean = false;
   selectedRecord: string = '';
   @State renamingName: string = '';
+  @State isSelectionMode: boolean = false;
+  @State selectedRecords: string[] = [];
+  headerParams: HeaderParams = new HeaderParams();
+  headerContent: ComponentContent<HeaderParams> | null = null;
+
+  aboutToAppear(): void {
+    this.headerParams.onDelete = () => {
+      this.handleDelete();
+    };
+    this.headerParams.onRename = () => {
+      this.handleRename();
+    };
+    this.headerParams.onCancel = () => {
+      this.handleCancel();
+    };
+    this.headerContent = new ComponentContent(this.getUIContext(), wrapBuilder(selectionHeaderBuilder), this.headerParams);
+  }
+
   renameController: CustomDialogController | null = new CustomDialogController({
     builder: RenameDialog({
       newName: $renamingName,
       confirm: (newName: string) => {
         if (newName) {
           this.records.renameRecord(this.getUIContext().getHostContext()!, this.selectedRecord, newName);
+          this.exitSelectionMode();
         }
       }
     }),
@@ -117,6 +184,39 @@ export default struct Notes {
     alignment: DialogAlignment.Center,
     customStyle: false
   });
+
+  handleDelete(): void {
+    AlertDialog.show({
+      title: 'Delete Records',
+      message: `Are you sure you want to delete ${this.selectedRecords.length} records?`,
+      primaryButton: {
+        value: 'Delete',
+        fontColor: Color.Red,
+        action: () => {
+          this.records.deleteRecords(this.getUIContext().getHostContext()!, this.selectedRecords);
+          this.exitSelectionMode();
+        }
+      },
+      secondaryButton: {
+        value: 'Cancel',
+        action: () => {
+        }
+      }
+    });
+  }
+
+  handleRename(): void {
+    if (this.selectedRecords.length === 1) {
+      this.selectedRecord = this.selectedRecords[0];
+      this.renamingName = this.selectedRecord;
+      this.renameController?.open();
+    }
+  }
+
+  handleCancel(): void {
+    this.exitSelectionMode();
+  }
+
   optionsController: CustomDialogController | null = new CustomDialogController({
     builder: OptionsDialog({
       rename: () => {
@@ -147,6 +247,37 @@ export default struct Notes {
     customStyle: false
   });
 
+  toggleSelection(path: string): void {
+    const index = this.selectedRecords.indexOf(path);
+    if (index > -1) {
+      this.selectedRecords = this.selectedRecords.filter(item => item !== path);
+    } else {
+      this.selectedRecords = [...this.selectedRecords, path];
+    }
+    this.updateHeader();
+    if (this.selectedRecords.length === 0) {
+      this.exitSelectionMode();
+    }
+  }
+
+  enterSelectionMode(path: string): void {
+    this.isSelectionMode = true;
+    this.selectedRecords = [path];
+    this.updateHeader();
+  }
+
+  exitSelectionMode(): void {
+    this.isSelectionMode = false;
+    this.selectedRecords = [];
+    this.updateHeader();
+  }
+
+  updateHeader(): void {
+    this.headerParams.isSelectionMode = this.isSelectionMode;
+    this.headerParams.selectedCount = this.selectedRecords.length;
+    this.headerContent?.update(this.headerParams);
+  }
+
   formatPath(path: string): string {
     const timestamp = Number.parseInt(path.split('.')[0]);
     if (!isNaN(timestamp) && timestamp.toString().length >= 10) {
@@ -158,7 +289,7 @@ export default struct Notes {
   build() {
     Stack() {
       ArcList({
-        header: new ComponentContent(this.getUIContext(), wrapBuilder(titleBuilder))
+        header: this.headerContent
       }) {
         ForEach(this.records.fileNames, (path: string) => {
           ArcListItem() {
@@ -171,17 +302,24 @@ export default struct Notes {
             }
             .width('100%')
             .height(40)
-            .backgroundColor(Color.White)
+            .backgroundColor(this.selectedRecords.includes(path) ? Color.Grey : Color.White)
             .foregroundColor(Color.Black)
             .onClick(async () => {
-              this.selectedRecord = path;
-              this.openSheet = true;
+              if (this.isSelectionMode) {
+                this.toggleSelection(path);
+              } else {
+                this.selectedRecord = path;
+                this.openSheet = true;
+              }
             })
             .gesture(
               LongPressGesture()
                 .onAction(() => {
-                  this.selectedRecord = path;
-                  this.optionsController?.open();
+                  if (this.isSelectionMode) {
+                    this.toggleSelection(path);
+                  } else {
+                    this.enterSelectionMode(path);
+                  }
                 })
             );
           }.width('calc(100% - 32vp)');
