@@ -35,4 +35,19 @@ export default class Records {
       console.error('deleteRecord err:', e);
     }
   }
+
+  renameRecord(context: Context, oldName: string, newName: string) {
+    try {
+      const parts = oldName.split('.');
+      const ext = parts.length > 1 ? parts.pop() : '';
+      const finalNewName = (ext && !newName.endsWith('.' + ext)) ? `${newName}.${ext}` : newName;
+
+      const oldPath = context.filesDir + '/' + oldName;
+      const newPath = context.filesDir + '/' + finalNewName;
+      fs.renameSync(oldPath, newPath);
+      this.fileNames = this.fileNames.map(name => name === oldName ? finalNewName : name);
+    } catch (e) {
+      console.error('renameRecord err:', e);
+    }
+  }
 }
