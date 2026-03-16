@@ -27,7 +27,9 @@ function selectionHeaderBuilder(params: HeaderParams) {
     Row({ space: 24 }) {
       if (params.selectedCount === 1) {
         Button() {
-          Text('rename').fontColor(Color.Blue).fontSize(20)
+          SymbolGlyph($r('sys.symbol.square_and_pencil'))
+            .fontSize(24)
+            .fontColor([Color.Blue])
         }
         .onClick(() => {
           params.onRename();
