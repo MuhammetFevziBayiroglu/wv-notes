@@ -24,31 +24,37 @@ class HeaderParams {
 @Builder
 function selectionHeaderBuilder(params: HeaderParams) {
   if (params.isSelectionMode) {
-    Column({ space: 8 }) {
-      Button('delete')
-        .onClick(() => {
-          params.onDelete();
-        })
-        .backgroundColor(Color.Transparent)
-        .fontColor(Color.Red)
-        .fontSize(20)
+    Row({ space: 24 }) {
       if (params.selectedCount === 1) {
-        Button('rename')
-          .onClick(() => {
-            params.onRename();
-          })
-          .backgroundColor(Color.Transparent)
-          .fontColor(Color.Blue)
-          .fontSize(20)
-      }
-      Button('cancel')
+        Button() {
+          Text('rename').fontColor(Color.Blue).fontSize(20)
+        }
         .onClick(() => {
-          params.onCancel();
+          params.onRename();
         })
         .backgroundColor(Color.Transparent)
-        .fontColor(Color.Gray)
-        .fontSize(20)
-    }.width('100%').padding({ top: 10, bottom: 10 })
+      }
+
+      Button() {
+        SymbolGlyph($r('sys.symbol.trash'))
+          .fontSize(24)
+          .fontColor([Color.Red])
+      }
+      .onClick(() => {
+        params.onDelete();
+      })
+      .backgroundColor(Color.Transparent)
+
+      Button() {
+        SymbolGlyph($r('sys.symbol.xmark'))
+          .fontSize(24)
+          .fontColor([Color.Gray])
+      }
+      .onClick(() => {
+        params.onCancel();
+      })
+      .backgroundColor(Color.Transparent)
+    }.width('100%').justifyContent(FlexAlign.Center).padding({ top: 10, bottom: 10 })
   } else {
     Text('My Notes').fontSize(24).margin({ top: 10, bottom: 10 });
   }
