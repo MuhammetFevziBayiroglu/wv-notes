@@ -71,6 +71,7 @@ export default struct RecorderPage {
                 .width(60)
                 .height(28)
                 .fontSize(10)
+                .placeholderFont({ size: 8 })
                 .onChange((value: string) => {
                   this.maxTimeLimit = Number.parseInt(value) || 0;
                 })

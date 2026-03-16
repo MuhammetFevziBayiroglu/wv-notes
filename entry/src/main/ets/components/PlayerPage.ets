@@ -90,8 +90,8 @@ struct PlayerControls {
         max: this.player.duration,
         step: 1
       })
-        .width('80%')
-        .height(20)
+        .width('70%')
+        .height(16)
         .onChange((value: number, mode: SliderChangeMode) => {
           if (mode === SliderChangeMode.End || mode === SliderChangeMode.Click) {
             this.player.seek(value);
@@ -106,7 +106,7 @@ struct PlayerControls {
         Text(`-${this.formatTime(this.player.duration - this.player.currentTime)}`)
           .fontSize(10)
           .fontColor(Color.White)
-      }.width('80%')
+      }.width('70%')
 
       Row({ space: 10 }) {
         Button() {
