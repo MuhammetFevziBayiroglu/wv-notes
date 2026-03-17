@@ -102,11 +102,7 @@ struct PlayerControls {
         Text(this.formatTime(this.player.currentTime))
           .fontSize(10)
           .fontColor(Color.White)
-        Blank()
-        Text(`-${this.formatTime(this.player.duration - this.player.currentTime)}`)
-          .fontSize(10)
-          .fontColor(Color.White)
-      }.width('60%')
+      }.width('60%').justifyContent(FlexAlign.Center)
 
       Row({ space: 10 }) {
         Button() {
