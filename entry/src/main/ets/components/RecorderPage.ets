@@ -47,7 +47,7 @@ export default struct RecorderPage {
         } else {
           Column({ space: 2 }) {
             Row({ space: 6 }) {
-              Text('Quality:').fontColor(Color.White).fontSize(10)
+              Text('Quality:').fontColor(Color.White).fontSize(8)
               Select([
                 { value: 'Low' },
                 { value: 'Average' },
@@ -55,9 +55,11 @@ export default struct RecorderPage {
               ])
                 .selected(1)
                 .value('Average')
-                .font({ size: 10 })
+                .font({ size: 8 })
                 .fontColor(Color.White)
-                .height(28)
+                .optionFont({ size: 8 })
+                .selectedOptionFont({ size: 8 })
+                .height(24)
                 .onSelect((index: number) => {
                   const qualities = ['low', 'average', 'high'];
                   this.quality = qualities[index];
