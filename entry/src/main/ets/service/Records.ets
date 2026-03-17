@@ -76,10 +76,10 @@ export default class Records {
       const minutes = Math.floor(totalSeconds / 60);
       const seconds = totalSeconds % 60;
       // Ensure seconds are always 2 digits
-      return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+      return ` ${minutes}:${seconds.toString().padStart(2, '0')} `;
     } catch (e) {
       console.error('getDuration err:', e);
-      return '0:00';
+      return ' 0:00 ';
     } finally {
       if (file) {
         fs.closeSync(file.fd);
